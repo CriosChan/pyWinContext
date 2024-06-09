@@ -11,8 +11,8 @@ ComModes = None
 
 
 def reg_save(data, oldData, parent):
-    global completedBat, completedIcon
-    completedBat = {}
+    global completedPy, completedIcon
+    completedPy = {}
     completedIcon = {}
     global completed
     completed = {}
@@ -54,8 +54,8 @@ def reg_save(data, oldData, parent):
 
 
 def direct_save(data, oldData, parent):
-    global completedBat, completedIcon
-    completedBat = {}
+    global completedPy, completedIcon
+    completedPy = {}
     completedIcon = {}
     global completed
     completed = {}
@@ -122,15 +122,15 @@ def create_reg_add(data):
             result += "[HKEY_CLASSES_ROOT\\SystemFileAssociations\\"
             result += filetype + "\\shell\\pyWin-" + command["regname"]
             result += "\\command]\r\n"
-            result += "@=\"cmd /c " + configLoc.replace("\\", "\\\\")
-            result += "\\\\comStore\\\\" + str(command["id"]) + ".bat \"%1\"\"\r\n"
+            result += f"@=\"{find_python_executable()} " + configLoc.replace("\\", "\\\\")
+            result += "\\\\comStore\\\\" + str(command["id"]) + ".py \"%1\"\"\r\n"
             if "icon_path" in command and command["icon_path"] is not None:
                 create_icon(command["icon_path"], command["id"])
                 result += "\"Icon\"=\"" + configLoc.replace("\\", "\\\\")
                 result += "\\\\iconStore\\\\" + str(command["id"])
                 result += ".ico,0\"\r\n"
             result += "\r\n"
-            create_bat(command)
+            create_py(command)
         for group in info["groups"]:
             groupObj = info["groups"][group]
             result += "[HKEY_CLASSES_ROOT\\SystemFileAssociations\\"
@@ -169,10 +169,10 @@ def create_reg_add(data):
         result += "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows"
         result += "\\CurrentVersion\\Explorer\\CommandStore\\shell\\pyWin-"
         result += com["regname"] + "\\command]\r\n"
-        result += "@=\"cmd /c " + configLoc.replace("\\", "\\\\")
+        result += f"@=\"{find_python_executable()} " + configLoc.replace("\\", "\\\\")
         result += "\\\\comStore\\\\" + str(com["id"])
-        result += ".bat \\\"\"%1\"\\\"\"\r\n\r\n"
-        create_bat(com)
+        result += ".py \\\"%1\\\"\"\r\n\r\n"
+        create_py(com)
     return result
 
 
@@ -190,9 +190,9 @@ def direct_add(data, parent):
                 iconPath += ".ico,0"
             reg.create_command(
                 "pyWin-" + command["regname"], command["description"],
-                "cmd /c " + configLoc + "\\comStore\\" + str(command["id"])
-                + ".bat \"%1\"", filetype, iconPath)
-            create_bat(command)
+                f"{find_python_executable()} " + configLoc + "\\comStore\\" + str(command["id"])
+                + ".py \"%1\"", filetype, iconPath)
+            create_py(command)
         for group in info["groups"]:
             groupObj = info["groups"][group]
             iconPath = None
@@ -222,9 +222,9 @@ def direct_add(data, parent):
             iconPath = configLoc + "\\iconStore\\" + str(com["id"]) + ".ico,0"
         reg.create_sub_command(
             "pyWin-" + com["regname"], com["description"],
-            "cmd /c " + configLoc + "\\comStore\\" + str(com["id"])
-            + ".bat \"%1\"", iconPath)
-        create_bat(com)
+            f"{find_python_executable()} " + configLoc + "\\comStore\\" + str(com["id"])
+            + ".py \"%1\"", iconPath)
+        create_py(com)
         init += 35 / length
         parent.set_progress(init)
 
@@ -234,7 +234,7 @@ def data_to_out(data):
     for key in data:
         item = data[key]
         if "command" in item:
-            create_bat(item)
+            create_py(item)
             for ft in item["filetypes"]:
                 if ft not in res['filetypes']:
                     create_filetype(res, ft)
@@ -300,25 +300,47 @@ def create_group(res, ft, parent, name, icon_path):
     res['filetypes'][ft]['groups'][parent]['coms'] = []
 
 
-completedBat = {}
+completedPy = {}
 completedIcon = {}
+import sys
+def find_python_executable():
+    # Recherche dans les variables d'environnement PATH
+    paths = os.environ.get("PATH", "").split(os.pathsep)
+    for path in paths:
+        python_executable = os.path.join(path, "python.exe")
+        if os.path.isfile(python_executable):
+            return str(python_executable).replace("\\", "\\\\")
+    
+    return None
 
-
-def create_bat(command):
-    if command["id"] not in completedBat:
-        completedBat[command["id"]] = True
+def create_py(command):
+    if command["id"] not in completedPy:
+        completedPy[command["id"]] = True
         file = open(
-            configLoc + "\\comStore\\" + str(command["id"]) + ".bat", 'w')
-        batString = "@echo off"
-        if command["commandMode"] == ComModes.BAT:
-            batString += "\r\ncmd /c " + command["command"] + " %1"
+            configLoc + "\\comStore\\" + str(command["id"]) + ".py", 'w')
+        pyString = ""
+        if command["commandMode"] == ComModes.PY:
+            pyString += "\r\nimport sys"
+            pyString += "\r\nimport subprocess"
+            pyString += f"\r\nsubprocess.run([{find_python_executable()}, " + command["command"] + ", sys.argv[1]])"
         else:
+            pyString = '''
+import sys
+from pathlib import Path
+
+arg = sys.argv[1]
+fullPath = Path(arg)
+fileName = fullPath.stem
+fileWithExt = fullPath.name
+path = fullPath.parent
+'''
             for com in command["command"]:
-                batString += "\r\n" + com
+                pyString += "\r\n" + com
         if command["after"]:
-            batString += "\r\ncmd /c " + configLoc + "\\comStore\\"
-            batString += str(command["after"]) + ".bat \"%1\""
-        file.write(batString)
+            pyString += "\r\nimport sys"
+            pyString += "\r\nimport subprocess"
+            pyString += f"\r\nsubprocess.run([{find_python_executable()}, " + configLoc + "\\comStore\\" + str(command["after"]) + ".py, sys.argv[1]])"
+        file.write(pyString)
         file.close()
 
 

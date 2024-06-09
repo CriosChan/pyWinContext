@@ -1,4 +1,4 @@
-# pyWinContext
+# pyWinContext but it uses Python for scripts, not batch.
 ![](https://i.imgur.com/uqWDQ6y.png)
 
 pyWinContext is a manager for custom context menus, written in Python 3,
@@ -37,7 +37,7 @@ From there, you can run the application by launching launch.pyw as admin, or
 run the setup to create an exe (if you have installed PyInstaller).
 
 ```batch
-pyinstaller --onefile uac_wrapper.spec
+pyinstaller uac_wrapper.spec
 ```
 
 ## Command Line Options
@@ -132,7 +132,25 @@ picture at the top of the page, and help immensely with automation.
 
 ## Variables
 
-Variables and parameters are handled directly by the batch interpreter in Windows. You can find a helpful list of these [here](https://ss64.com/nt/syntax-args.html)
+By default, the path to your file is given as the first argument.
+You can then parse it in your scripts using something like this :
+
+```python
+import sys
+from pathlib import Path
+
+arg = sys.argv[1]
+fullPath = Path(arg)
+fileName = fullPath.stem
+fileWithExt = fullPath.name
+path = fullPath.parent
+```
+
+If you're using the software's built-in command system, the lines above are obligatorily loaded. This allows you to use the following variables directly:
+- fullPath: For the path to your file
+- fileName: File name without extension
+- fileWithExt: File name with extension
+- path: Path to file location.
 
 ## License
 

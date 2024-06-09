@@ -51,7 +51,7 @@ if not configPath.is_dir():
     os.mkdir(configLoc)
 
 class ComModes:
-    BAT, List = range(2)
+    PY, List = range(2)
 
 
 if not hasattr(sys, "_MEIPASS"):
@@ -276,7 +276,7 @@ class WinContextApp(QMainWindow, app.Ui_MainWindow):
                 com = self.add_command(
                     item["name"], item["description"], True, parent)
                 com.commandMode = item["commandMode"]
-                if com.commandMode == ComModes.BAT:
+                if com.commandMode == ComModes.PY:
                     com.path = item["command"]
                 else:
                     com.commands = item["command"]
@@ -535,7 +535,7 @@ class WinContextApp(QMainWindow, app.Ui_MainWindow):
         itemCommand.filetypes = []
         itemCommand.commands = []
         itemCommand.path = ""
-        itemCommand.commandMode = ComModes.BAT
+        itemCommand.commandMode = ComModes.PY
         itemCommand.before = None
         itemCommand.after = None
         itemCommand.id = uuid.uuid4().int
@@ -787,7 +787,7 @@ class WinContextApp(QMainWindow, app.Ui_MainWindow):
                 res[name]["commandMode"] = item.commandMode
                 res[name]["command"] = (
                     item.commands
-                    if item.commandMode != ComModes.BAT
+                    if item.commandMode != ComModes.PY
                     else item.path
                 )
                 res[name]["after"] = item.after
@@ -846,7 +846,7 @@ class CommandDialog(QDialog, command.Ui_Command):
         self.initUI()
 
     def save(self):
-        if self.action.commandMode == ComModes.BAT:
+        if self.action.commandMode == ComModes.PY:
             self.action.path = self.path
         else:
             self.action.commands = []
@@ -868,7 +868,7 @@ class CommandDialog(QDialog, command.Ui_Command):
         self.setWindowIcon(app_icon)
         self.radioButton.toggled.connect(self.radio_change)
         self.accepted.connect(self.save)
-        self.radio_change(self.action.commandMode == ComModes.BAT)
+        self.radio_change(self.action.commandMode == ComModes.PY)
         self.command_select()
         self.path = (
             self.action.path
@@ -893,7 +893,7 @@ class CommandDialog(QDialog, command.Ui_Command):
         self.pushButton_5.setEnabled(not state)
         self.pushButton.setEnabled(state)
         self.label.setEnabled(state)
-        self.action.commandMode = (ComModes.BAT if state else ComModes.List)
+        self.action.commandMode = (ComModes.PY if state else ComModes.List)
         self.radioButton.setChecked(state)
         self.radioButton_2.setChecked(not state)
         self.blockSignals(oldState)
@@ -910,7 +910,7 @@ class CommandDialog(QDialog, command.Ui_Command):
         file.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         file.setFileMode(QFileDialog.ExistingFile)
         self.path = file.getOpenFileUrl(
-            filter="Windows Batch File (*.bat)")[0].toLocalFile()
+            filter="Python Scr (*.py)")[0].toLocalFile()
         fMetrics = QtGui.QFontMetricsF(QtGui.QFont())
         self.label.setText(fMetrics.elidedText(
             self.path, QtCore.Qt.ElideRight, self.label.width() - 15

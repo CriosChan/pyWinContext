@@ -96,10 +96,10 @@ class Ui_Command(object):
     def retranslateUi(self, Command):
         _translate = QtCore.QCoreApplication.translate
         Command.setWindowTitle(_translate("Command", "Command Editor"))
-        Command.setWhatsThis(_translate("Command", "Command List is treated like a batch script and should work with anything you\'d put into one.\n"
+        Command.setWhatsThis(_translate("Command", "Command List is treated like a python script and should work with anything you\'d put into one.\n"
 "\n"
-"%1 will give you the path to the file."))
-        self.radioButton.setText(_translate("Command", ".BAT File"))
+"fullPath will give you the path to the file."))
+        self.radioButton.setText(_translate("Command", ".PY File"))
         self.pushButton.setText(_translate("Command", "Select..."))
         self.label.setText(_translate("Command", "File"))
         self.radioButton_2.setText(_translate("Command", "Command List"))
