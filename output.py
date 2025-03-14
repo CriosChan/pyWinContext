@@ -322,7 +322,7 @@ def create_py(command):
         if command["commandMode"] == ComModes.PY:
             pyString += "\r\nimport sys"
             pyString += "\r\nimport subprocess"
-            pyString += f"\r\nsubprocess.run([{find_python_executable()}, " + command["command"] + ", sys.argv[1]])"
+            pyString += f"\r\nsubprocess.run([\"{find_python_executable()}\", \"" + command["command"] + "\", sys.argv[1]])"
         else:
             pyString = '''
 import sys
