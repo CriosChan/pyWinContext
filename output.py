@@ -122,8 +122,7 @@ def create_reg_add(data):
             result += "[HKEY_CLASSES_ROOT\\SystemFileAssociations\\"
             result += filetype + "\\shell\\pyWin-" + command["regname"]
             result += "\\command]\r\n"
-            result += f"@=\"{find_python_executable()} " + configLoc.replace("\\", "\\\\")
-            result += "\\\\comStore\\\\" + str(command["id"]) + ".py \"%1\"\"\r\n"
+            result += f'@="\\\"{find_python_executable()}\\\" \\\"{configLoc.replace("\\", "\\\\")}\\\\comStore\\\\{command["id"]}.py\\\" \\\"%1\\\""\r\n'
             if "icon_path" in command and command["icon_path"] is not None:
                 create_icon(command["icon_path"], command["id"])
                 result += "\"Icon\"=\"" + configLoc.replace("\\", "\\\\")
@@ -169,9 +168,7 @@ def create_reg_add(data):
         result += "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows"
         result += "\\CurrentVersion\\Explorer\\CommandStore\\shell\\pyWin-"
         result += com["regname"] + "\\command]\r\n"
-        result += f"@=\"{find_python_executable()} " + configLoc.replace("\\", "\\\\")
-        result += "\\\\comStore\\\\" + str(com["id"])
-        result += ".py \\\"%1\\\"\"\r\n\r\n"
+        result += f'@="\\\"{find_python_executable()}\\\" \\\"{configLoc.replace("\\", "\\\\")}\\\\comStore\\\\{com["id"]}.py\\\" \\\"%1\\\""\r\n'
         create_py(com)
     return result
 
